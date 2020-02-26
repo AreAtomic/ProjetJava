@@ -1,1 +1,1 @@
-package Code;public interface Payable {    public int CalculSalaire();}
+package Code;public interface Payable {    public float CalculSalaire();}
