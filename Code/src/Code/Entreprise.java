@@ -17,7 +17,7 @@ public class Entreprise {
         this.verifMatricules = new ArrayList<>();
 
         Scanner sc;
-            sc = new Scanner(new File("C:\\Users\\cacar\\Documents\\ProjetJavaVrai\\Code\\Entreprise.csv"));
+            sc = new Scanner(new File("C:\\Users\\aurel\\Documents\\ProjetJava\\Code\\src\\Code\\Entreprise.csv"));
             String ligne = sc.nextLine();
             while (sc.hasNext()) {
                 ligne = sc.nextLine();

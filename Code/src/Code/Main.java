@@ -1,1 +1,1 @@
-package Code;import java.io.FileNotFoundException;public class Main {    public static void main(String[] args) throws EntrepriseException, FileNotFoundException {        Entreprise entreprise = new Entreprise();    }}
+package Code;import java.io.FileNotFoundException;public class Main {    public static void main(String[] args) throws EntrepriseException, FileNotFoundException {        Entreprise entreprise = new Entreprise();    }}
