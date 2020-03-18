@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.TreeMap;
 
-public class Entreprise {
+public class Entreprise implements Payable {
     protected TreeMap<String, Employe> entreprise;
     protected ArrayList<String> idEmployes;
     protected ArrayList<Employe> verifMatricules;
@@ -17,7 +17,11 @@ public class Entreprise {
         this.verifMatricules = new ArrayList<>();
 
         Scanner sc;
+<<<<<<< HEAD
             sc = new Scanner(new File("C:\\Users\\aurel\\Documents\\ProjetJava\\Code\\src\\Code\\Entreprise.csv"));
+=======
+            sc = new Scanner(new File("C:\\Users\\cacar\\Documents\\ProjetJavaVrai\\Code\\src\\Code\\Entreprise.csv"));
+>>>>>>> a341d5b3e68001e057cd69c45e68e5eea803c162
             String ligne = sc.nextLine();
             while (sc.hasNext()) {
                 ligne = sc.nextLine();
@@ -60,5 +64,15 @@ public class Entreprise {
 
         }
 
+    }
+
+    public float CalculSalaire(){
+        float salaireTotal = 0;
+        for (String e : idEmployes){
+            float salaire = entreprise.get(e).CalculSalaire();
+            System.out.println("Salaire de "+entreprise.get(e)+" : "+salaire);
+            salaireTotal += salaire;
+        }
+        return salaireTotal;
     }
 }
