@@ -17,51 +17,46 @@ public class Entreprise implements Payable {
         this.verifMatricules = new ArrayList<>();
 
         Scanner sc;
-<<<<<<< HEAD
-            sc = new Scanner(new File("C:\\Users\\aurel\\Documents\\ProjetJava\\Code\\src\\Code\\Entreprise.csv"));
-=======
-            sc = new Scanner(new File("C:\\Users\\cacar\\Documents\\ProjetJavaVrai\\Code\\src\\Code\\Entreprise.csv"));
->>>>>>> a341d5b3e68001e057cd69c45e68e5eea803c162
-            String ligne = sc.nextLine();
-            while (sc.hasNext()) {
-                ligne = sc.nextLine();
-                String[] stoken = ligne.split(",");
-                String id = stoken[0];
-                String nom = stoken[1];
-                String prenom = stoken[2];
-                int matricule = Integer.parseInt(stoken[3]);
-                float indice = Integer.parseInt(stoken[4]);
-                this.idEmployes.add(id);
+        sc = new Scanner(new File("C:\\Users\\aurel\\Documents\\ProjetJava\\Code\\src\\Code\\Entreprise.csv"));
+        String ligne = sc.nextLine();
+        while (sc.hasNext()) {
+            ligne = sc.nextLine();
+            String[] stoken = ligne.split(",");
+            String id = stoken[0];
+            String nom = stoken[1];
+            String prenom = stoken[2];
+            int matricule = Integer.parseInt(stoken[3]);
+            float indice = Integer.parseInt(stoken[4]);
+            this.idEmployes.add(id);
 
-                if (id.charAt(id.length() - 2) == ('E')) {
-                    EmployeDeBase employe = new EmployeDeBase(nom, prenom, matricule, indice);
-                    this.entreprise.put(id, employe);
-                    this.verifMatricules.add(employe);
-                    for (Employe e : verifMatricules) {
-                        if (e.matricule == matricule && !(e.nom.equals(nom))) {
-                            throw new EntrepriseException("Le matricule existe déjà: " + employe);
-                        }
-                    }
-                } else if (id.charAt(id.length() - 2) == ('C')) {
-                    Commercial commercial = new Commercial(nom, prenom, matricule, indice);
-                    this.entreprise.put(id, commercial);
-                    this.verifMatricules.add(commercial);
-                    for (Employe e : verifMatricules) {
-                        if (e.matricule == matricule && !(e.nom.equals(nom))){
-                            throw new EntrepriseException("Le matricule existe déjà: " + commercial);
-                        }
-                    }
-                } else {
-                    Responsable respo = new Responsable(nom, prenom, matricule, indice);
-                    this.entreprise.put(id, respo);
-                    this.verifMatricules.add(respo);
-                    for (Employe e : verifMatricules) {
-                        if (e.matricule == matricule && !(e.nom.equals(nom))) {
-                            throw new EntrepriseException("Le matricule existe déjà: " + respo);
-                        }
+            if (id.charAt(id.length() - 2) == ('E')) {
+                EmployeDeBase employe = new EmployeDeBase(nom, prenom, matricule, indice);
+                this.entreprise.put(id, employe);
+                this.verifMatricules.add(employe);
+                for (Employe e : verifMatricules) {
+                    if (e.matricule == matricule && !(e.nom.equals(nom))) {
+                        throw new EntrepriseException("Le matricule existe déjà: " + employe);
                     }
                 }
-
+            } else if (id.charAt(id.length() - 2) == ('C')) {
+                Commercial commercial = new Commercial(nom, prenom, matricule, indice);
+                this.entreprise.put(id, commercial);
+                this.verifMatricules.add(commercial);
+                for (Employe e : verifMatricules) {
+                    if (e.matricule == matricule && !(e.nom.equals(nom))){
+                        throw new EntrepriseException("Le matricule existe déjà: " + commercial);
+                    }
+                }
+            } else {
+                Responsable respo = new Responsable(nom, prenom, matricule, indice);
+                this.entreprise.put(id, respo);
+                this.verifMatricules.add(respo);
+                for (Employe e : verifMatricules) {
+                    if (e.matricule == matricule && !(e.nom.equals(nom))) {
+                        throw new EntrepriseException("Le matricule existe déjà: " + respo);
+                    }
+                }
+            }
         }
 
     }
