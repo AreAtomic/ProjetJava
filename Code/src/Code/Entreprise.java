@@ -16,7 +16,7 @@ public class Entreprise implements Payable {
         this.idEmployes = new ArrayList<String>();
         this.verifMatricules = new ArrayList<>();
 
-        Scanner sc;
+        /*Scanner sc;
         sc = new Scanner(new File("C:\\Users\\aurel\\Documents\\ProjetJava\\Code\\src\\Code\\Entreprise.csv"));
         String ligne = sc.nextLine();
         while (sc.hasNext()) {
@@ -57,7 +57,7 @@ public class Entreprise implements Payable {
                     }
                 }
             }
-        }
+        }*/
     }
 
     public void creationEntreprise(){
@@ -73,7 +73,7 @@ public class Entreprise implements Payable {
                 cptR = 1;
                 String id = "R" + cptR + "," + cptRNiveau;
                 entreprise.put(id, creationResponsable());
-                creationBranche(cptR, cptE, cptC);
+                creationBranche(cptR+1, cptE, cptC, 1);
                 cptRNiveau += 1;
             } else {
                 continu = false;
@@ -81,18 +81,20 @@ public class Entreprise implements Payable {
         }
     }
 
-    public void creationBranche(int cptR, int cptE, int cptC){
+    public boolean creationBranche(int cptR, int cptE, int cptC, int cptRNiveau){
         boolean branche = true;
+        if(cptR == 1){
+            return false;
+        }
         while(branche) {
-            int cptRNiveau = 1;
             Scanner sc = new Scanner(System.in);
-            System.out.println("Créer un : Responsable de niveau " + (cptR+1) + " (tapez R), un employee sous Responsable " + cptR + " (tapez E), un commercial sous Responsable " + cptR + " (tapez C), branche terminée (tapez Q)");
+            System.out.println("Créer un : Responsable de niveau " + (cptR) + " (tapez R), un employee sous Responsable " + (cptR-1) + " (tapez E), un commercial sous Responsable " + (cptR-1) + " (tapez C), branche terminée (tapez Q)");
             String rep = sc.nextLine();
             if (rep.equals("R")) {
-                cptR += 1;
                 String id = "R" + cptR + "," + cptRNiveau;
+                cptRNiveau += 1;
                 entreprise.put(id, creationResponsable());
-                creationBranche(cptR, cptE, cptC);
+                return (creationBranche(cptR+1, cptE, cptC, 1));
             } else if (rep.equals("E")) {
                 String id = "R"+cptR+","+cptRNiveau+"E"+cptE;
                 entreprise.put(id, creationEmploye());
@@ -102,10 +104,10 @@ public class Entreprise implements Payable {
                 entreprise.put(id, creationCommercial());
                 cptC += 1;
             } else if(rep.equals("Q")){
-                cptR-=1;
-                branche = false;
+               return creationBranche(cptR-1, cptE, cptC, cptRNiveau+1);
             }
         }
+        return true;
     }
 
     //Fonction permettant la création d'un responsable
