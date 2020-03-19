@@ -58,8 +58,101 @@ public class Entreprise implements Payable {
                 }
             }
         }
-
     }
+
+    public void creationEntreprise(){
+        int cptR = 0;
+        int cptRNiveau = 1;
+        int cptE = 1;
+        int cptC = 1;
+        boolean continu = true;
+        while(continu) {
+            Scanner sc = new Scanner(System.in);
+            System.out.println("Créer un : Responsable de niveau " + 1 + "," + cptRNiveau + " (tapez R)");
+            if (sc.nextLine().equals("R")) {
+                cptR = 1;
+                String id = "R" + cptR + "," + cptRNiveau;
+                entreprise.put(id, creationResponsable());
+                creationBranche(cptR, cptE, cptC);
+                cptRNiveau += 1;
+            } else {
+                continu = false;
+            }
+        }
+    }
+
+    public void creationBranche(int cptR, int cptE, int cptC){
+        boolean branche = true;
+        while(branche) {
+            int cptRNiveau = 1;
+            Scanner sc = new Scanner(System.in);
+            System.out.println("Créer un : Responsable de niveau " + (cptR+1) + " (tapez R), un employee sous Responsable " + cptR + " (tapez E), un commercial sous Responsable " + cptR + " (tapez C), branche terminée (tapez Q)");
+            String rep = sc.nextLine();
+            if (rep.equals("R")) {
+                cptR += 1;
+                String id = "R" + cptR + "," + cptRNiveau;
+                entreprise.put(id, creationResponsable());
+                creationBranche(cptR, cptE, cptC);
+            } else if (rep.equals("E")) {
+                String id = "R"+cptR+","+cptRNiveau+"E"+cptE;
+                entreprise.put(id, creationEmploye());
+                cptE += 1;
+            } else if (rep.equals("C")) {
+                String id = "R"+cptR+","+cptRNiveau+"C"+cptC;
+                entreprise.put(id, creationCommercial());
+                cptC += 1;
+            } else if(rep.equals("Q")){
+                cptR-=1;
+                branche = false;
+            }
+        }
+    }
+
+    //Fonction permettant la création d'un responsable
+    public Responsable creationResponsable(){
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Nom du Responsable : ");
+        String nom = sc.nextLine();
+        System.out.print("Prénom du Responsable : ");
+        String prenom = sc.nextLine();
+        System.out.print("Matricule du Responsable (en chiffre): ");
+        int matricule = sc.nextInt();
+        System.out.print("Indice salaire du Responsable (en chiffre): ");
+        int indiceSalaire = sc.nextInt();
+        Responsable r = new Responsable(nom, prenom, matricule, indiceSalaire);
+        return r;
+    }
+
+    //Fonction permettant la création d'un employe de base
+    public EmployeDeBase creationEmploye(){
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Nom de l'Employe : ");
+        String nom = sc.nextLine();
+        System.out.print("Prénom de l'Employe : ");
+        String prenom = sc.nextLine();
+        System.out.print("Matricule de l'Employe (en chiffre): ");
+        int matricule = sc.nextInt();
+        System.out.print("Indice salaire de l'Employe (en chiffre): ");
+        int indiceSalaire = sc.nextInt();
+        EmployeDeBase e = new EmployeDeBase(nom, prenom, matricule, indiceSalaire);
+        return e;
+    }
+
+    //Fonction permettant la création d'un commercial sans son volume de vente
+    public Commercial creationCommercial(){
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Nom du Commercial : ");
+        String nom = sc.nextLine();
+        System.out.print("Prénom du Commercial : ");
+        String prenom = sc.nextLine();
+        System.out.print("Matricule du Commercial (en chiffre): ");
+        int matricule = sc.nextInt();
+        System.out.print("Indice salaire du Commercial (en chiffre): ");
+        int indiceSalaire = sc.nextInt();
+        Commercial c = new Commercial(nom, prenom, matricule, indiceSalaire);
+        return c;
+    }
+
 
     public float CalculSalaire(){
         float salaireTotal = 0;
