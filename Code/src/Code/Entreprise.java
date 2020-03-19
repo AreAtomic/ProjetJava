@@ -2,6 +2,7 @@ package Code;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.TreeMap;
@@ -59,16 +60,30 @@ public class Entreprise implements Payable {
             }
         }*/
     }
+    protected String creationFichier() throws IOException {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Bienvenue dans la création de votre entreprise : entrez le nom du fichier souhaité");
+        String file = sc.nextLine();
+        file = file+".csv";
+        File f = new File(file);
+        if(f.createNewFile()){
+            System.out.println("Le fichier à été créé au chemin : "+f.getAbsolutePath());
+        }else{
+            System.out.println("Le fichier existe dèjà");
+        }
+        return f.getAbsolutePath();
+    }
 
-    public void creationEntreprise(){
+    public void creationEntreprise() throws IOException {
+        String file = creationFichier();
         int cptR = 0;
         int cptRNiveau = 1;
         int cptE = 1;
         int cptC = 1;
         boolean continu = true;
         while(continu) {
-            Scanner sc = new Scanner(System.in);
             System.out.println("Créer un : Responsable de niveau " + 1 + "," + cptRNiveau + " (tapez R)");
+            Scanner sc = new Scanner(System.in);
             if (sc.nextLine().equals("R")) {
                 cptR = 1;
                 String id = "R" + cptR + "," + cptRNiveau;
