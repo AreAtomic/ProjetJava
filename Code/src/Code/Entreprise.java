@@ -3,14 +3,21 @@ package Code;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.TreeMap;
+
+import static java.nio.file.StandardOpenOption.APPEND;
 
 public class Entreprise implements Payable {
     protected TreeMap<String, Employe> entreprise;
     protected ArrayList<String> idEmployes;
     protected ArrayList<Employe> verifMatricules;
+    protected String fileNom;
 
     public Entreprise() throws EntrepriseException, FileNotFoundException {
         this.entreprise = new TreeMap<String, Employe>();
@@ -60,26 +67,42 @@ public class Entreprise implements Payable {
             }
         }*/
     }
+
+    //Methode de création du fichier de sauvegarde ou de récupération des données
     protected String creationFichier() throws IOException {
         Scanner sc = new Scanner(System.in);
         System.out.println("Bienvenue dans la création de votre entreprise : entrez le nom du fichier souhaité");
         String file = sc.nextLine();
         file = file+".csv";
         File f = new File(file);
+        //Création du fichier
         if(f.createNewFile()){
             System.out.println("Le fichier à été créé au chemin : "+f.getAbsolutePath());
-        }else{
+            ecritureFichier("Id;Nom;Prénom;Matricule;IndiceSalaire\n", f.getAbsolutePath());
+        }
+        //Récupération des données
+        else{
             System.out.println("Le fichier existe dèjà");
         }
         return f.getAbsolutePath();
     }
 
+    //Méthode d'écriture dans le fichier : newLine est la nouvelle ligne et file est le chemin ou l'on doit écrire
+    private void ecritureFichier(String newLine, String file) throws IOException {
+        Path sauvegarde = Paths.get(file);
+        Files.write(sauvegarde, String.format(newLine).getBytes(), APPEND);
+    }
+
+    //Méthode de création de l'entreprise
     public void creationEntreprise() throws IOException {
-        String file = creationFichier();
+        //Initialisation des variables nécessaires à la création ou modification de l'entreprise
+        fileNom = creationFichier();
         int cptR = 0;
         int cptRNiveau = 1;
         int cptE = 1;
         int cptC = 1;
+
+        //Boucle de création des Responsable de niveau (Gérant de l'entreprise)
         boolean continu = true;
         while(continu) {
             System.out.println("Créer un : Responsable de niveau " + 1 + "," + cptRNiveau + " (tapez R)");
@@ -87,7 +110,8 @@ public class Entreprise implements Payable {
             if (sc.nextLine().equals("R")) {
                 cptR = 1;
                 String id = "R" + cptR + "," + cptRNiveau;
-                entreprise.put(id, creationResponsable());
+                entreprise.put(id, creationResponsable(id));
+                //Apelle la création de la branche sous le gérant
                 creationBranche(cptR+1, cptE, cptC, 1);
                 cptRNiveau += 1;
             } else {
@@ -96,8 +120,11 @@ public class Entreprise implements Payable {
         }
     }
 
-    public boolean creationBranche(int cptR, int cptE, int cptC, int cptRNiveau){
+    //Création d'une branche sous un responsable de manière récursive
+    public boolean creationBranche(int cptR, int cptE, int cptC, int cptRNiveau) throws IOException {
         boolean branche = true;
+
+        //Permet de remonter lorsque l'on a finis la création de la branche
         if(cptR == 1){
             return false;
         }
@@ -108,17 +135,24 @@ public class Entreprise implements Payable {
             if (rep.equals("R")) {
                 String id = "R" + cptR + "," + cptRNiveau;
                 cptRNiveau += 1;
-                entreprise.put(id, creationResponsable());
+                entreprise.put(id, creationResponsable(id));
+                //Création d'une sous branche avec un nouveau responsable (récursivité de la création)
                 return (creationBranche(cptR+1, cptE, cptC, 1));
-            } else if (rep.equals("E")) {
+            }
+            //Crée un employé de base
+            else if (rep.equals("E")) {
                 String id = "R"+cptR+","+cptRNiveau+"E"+cptE;
-                entreprise.put(id, creationEmploye());
+                entreprise.put(id, creationEmploye(id));
                 cptE += 1;
-            } else if (rep.equals("C")) {
+            }
+            //Crée un commercial
+            else if (rep.equals("C")) {
                 String id = "R"+cptR+","+cptRNiveau+"C"+cptC;
-                entreprise.put(id, creationCommercial());
+                entreprise.put(id, creationCommercial(id));
                 cptC += 1;
-            } else if(rep.equals("Q")){
+            }
+            //L'utilisateur demande à quitter
+            else if(rep.equals("Q")){
                return creationBranche(cptR-1, cptE, cptC, cptRNiveau+1);
             }
         }
@@ -126,8 +160,10 @@ public class Entreprise implements Payable {
     }
 
     //Fonction permettant la création d'un responsable
-    public Responsable creationResponsable(){
+    public Responsable creationResponsable(String id) throws IOException {
         Scanner sc = new Scanner(System.in);
+
+        // Processus de création
         System.out.print("Nom du Responsable : ");
         String nom = sc.nextLine();
         System.out.print("Prénom du Responsable : ");
@@ -136,13 +172,20 @@ public class Entreprise implements Payable {
         int matricule = sc.nextInt();
         System.out.print("Indice salaire du Responsable (en chiffre): ");
         int indiceSalaire = sc.nextInt();
+
+        //Création du responsable et écriture dans le fichier de sauvegarde
         Responsable r = new Responsable(nom, prenom, matricule, indiceSalaire);
+        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
+        ecritureFichier(newLine, fileNom);
+
         return r;
     }
 
     //Fonction permettant la création d'un employe de base
-    public EmployeDeBase creationEmploye(){
+    public EmployeDeBase creationEmploye(String id) throws IOException {
         Scanner sc = new Scanner(System.in);
+
+        // Processus de création
         System.out.print("Nom de l'Employe : ");
         String nom = sc.nextLine();
         System.out.print("Prénom de l'Employe : ");
@@ -151,13 +194,20 @@ public class Entreprise implements Payable {
         int matricule = sc.nextInt();
         System.out.print("Indice salaire de l'Employe (en chiffre): ");
         int indiceSalaire = sc.nextInt();
+
+        //Création de l'employé et écriture dans le fichier de sauvegarde
         EmployeDeBase e = new EmployeDeBase(nom, prenom, matricule, indiceSalaire);
+        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
+        ecritureFichier(newLine, fileNom);
+
         return e;
     }
 
     //Fonction permettant la création d'un commercial sans son volume de vente
-    public Commercial creationCommercial(){
+    public Commercial creationCommercial(String id) throws IOException {
         Scanner sc = new Scanner(System.in);
+
+        // Processus de création
         System.out.print("Nom du Commercial : ");
         String nom = sc.nextLine();
         System.out.print("Prénom du Commercial : ");
@@ -166,11 +216,16 @@ public class Entreprise implements Payable {
         int matricule = sc.nextInt();
         System.out.print("Indice salaire du Commercial (en chiffre): ");
         int indiceSalaire = sc.nextInt();
+
+        //Création de l'employé et écriture dans le fichier de sauvegarde
         Commercial c = new Commercial(nom, prenom, matricule, indiceSalaire);
+        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
+        ecritureFichier(newLine, fileNom);
+
         return c;
     }
 
-
+    //Methode de calcul des salaires totaux que l'entreprise reverse
     public float CalculSalaire(){
         float salaireTotal = 0;
         for (String e : idEmployes){
