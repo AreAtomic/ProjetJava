@@ -65,6 +65,10 @@ public class Entreprise implements Payable {
             String prenom = stoken[2];
             int matricule = Integer.parseInt(stoken[3]);
             float indice = Integer.parseInt(stoken[4]);
+            int volumeMensuelVente = 0;
+            if(stoken.length > 5){
+                volumeMensuelVente = Integer.parseInt(stoken[5]);
+            }
             this.idEmployes.add(id);
 
             if (id.charAt(id.length() - 2) == ('E')) {
@@ -77,7 +81,7 @@ public class Entreprise implements Payable {
                     }
                 }
             } else if (id.charAt(id.length() - 2) == ('C')) {
-                Commercial commercial = new Commercial(id, nom, prenom, matricule, indice);
+                Commercial commercial = new Commercial(id, nom, prenom, matricule, indice, volumeMensuelVente);
                 this.entreprise.put(id, commercial);
                 this.verifMatricules.add(commercial);
                 for (Employe e : verifMatricules) {
@@ -249,10 +253,12 @@ public class Entreprise implements Payable {
         int matricule = sc.nextInt();
         System.out.print("Indice salaire du Commercial (en chiffre): ");
         int indiceSalaire = sc.nextInt();
+        System.out.print("Volume de vente du Commercial (en chiffre): ");
+        int volumeVente = sc.nextInt();
 
         //Création de l'employé et écriture dans le fichier de sauvegarde
-        Commercial c = new Commercial(id, nom, prenom, matricule, indiceSalaire);
-        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
+        Commercial c = new Commercial(id, nom, prenom, matricule, indiceSalaire, volumeVente);
+        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+";"+volumeVente+"\n";
         ecritureFichier(newLine, fileNom);
 
         return c;
