@@ -7,21 +7,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.util.*;
 
 import static java.nio.file.StandardOpenOption.APPEND;
 
 public class Entreprise implements Payable {
-    protected TreeMap<String, Employe> entreprise;
+    protected TreeSet<Employe> entreprise;
     protected ArrayList<String> idEmployes;
     protected ArrayList<Employe> verifMatricules;
     protected String fileNom;
 
     public Entreprise() {
-        this.entreprise = new TreeMap<String, Employe>();
+        this.entreprise = new TreeSet<Employe>();
         this.idEmployes = new ArrayList<String>();
         this.verifMatricules = new ArrayList<>();
         this.fileNom = "UNDEFINED";
@@ -73,7 +70,7 @@ public class Entreprise implements Payable {
 
             if (id.charAt(id.length() - 2) == ('E')) {
                 EmployeDeBase employe = new EmployeDeBase(id, nom, prenom, matricule, indice);
-                this.entreprise.put(id, employe);
+                this.entreprise.add(employe);
                 this.verifMatricules.add(employe);
                 for (Employe e : verifMatricules) {
                     if (e.matricule == matricule && !(e.nom.equals(nom))) {
@@ -82,7 +79,7 @@ public class Entreprise implements Payable {
                 }
             } else if (id.charAt(id.length() - 2) == ('C')) {
                 Commercial commercial = new Commercial(id, nom, prenom, matricule, indice, volumeMensuelVente);
-                this.entreprise.put(id, commercial);
+                this.entreprise.add(commercial);
                 this.verifMatricules.add(commercial);
                 for (Employe e : verifMatricules) {
                     if (e.matricule == matricule && !(e.nom.equals(nom))){
@@ -91,7 +88,7 @@ public class Entreprise implements Payable {
                 }
             } else {
                 Responsable respo = new Responsable(id, nom, prenom, matricule, indice);
-                this.entreprise.put(id, respo);
+                this.entreprise.add(respo);
                 this.verifMatricules.add(respo);
                 for (Employe e : verifMatricules) {
                     if (e.matricule == matricule && !(e.nom.equals(nom))) {
@@ -144,12 +141,29 @@ public class Entreprise implements Payable {
             if (sc.nextLine().equals("R")) {
                 cptR = 1;
                 String id = "R" + cptR + "," + cptRNiveau;
-                entreprise.put(id, creationResponsable(id));
+                entreprise.add(creationResponsable(id));
                 //Apelle la création de la branche sous le gérant
                 creationBranche(cptR+1, cptE, cptC, 1, cptRNiveau);
                 cptRNiveau += 1;
             } else {
                 continu = false;
+            }
+        }
+        for(Employe r: entreprise){
+            if(r.id.length() <= 4) {
+                System.out.println("Non");
+                Responsable r1 = (Responsable) r;
+                int niveau = r.id.charAt(1);
+                for (Employe e : entreprise){
+                    int eNiveau = e.id.charAt(1);
+                    if(e != r){
+                        if(r.id.length() < 4 && r.id.charAt(1) == niveau){
+                            return;
+                        }else{
+                            r1.addEmployee(e);
+                        }
+                    }
+                }
             }
         }
     }
@@ -170,7 +184,7 @@ public class Entreprise implements Payable {
             if (rep.equals("R")) {
                 String id = "R" + cptR + "," + cptRNiveau;
                 cptRNiveau += 1;
-                entreprise.put(id, creationResponsable(id));
+                entreprise.add(creationResponsable(id));
                 //Création d'une sous branche avec un nouveau responsable (récursivité de la création)
                 return (creationBranche(cptR+1, cptE, cptC, 1, cptRNiveau));
             }
@@ -178,14 +192,14 @@ public class Entreprise implements Payable {
             else if (rep.equals("E")) {
                 int cptRLoc = cptR - 1;
                 String id = "R"+cptRLoc+","+(cptRBranche-1)+"E"+cptE;
-                entreprise.put(id, creationEmploye(id));
+                entreprise.add(creationEmploye(id));
                 cptE += 1;
             }
             //Crée un commercial
             else if (rep.equals("C")) {
                 int cptRLoc = cptR - 1;
                 String id = "R"+cptRLoc+","+(cptRBranche-1)+"C"+cptC;
-                entreprise.put(id, creationCommercial(id));
+                entreprise.add(creationCommercial(id));
                 cptC += 1;
             }
             //L'utilisateur demande à quitter
@@ -267,11 +281,22 @@ public class Entreprise implements Payable {
     //Methode de calcul des salaires totaux que l'entreprise reverse
     public float CalculSalaire(){
         float salaireTotal = 0;
-        for (String e : idEmployes){
-            float salaire = entreprise.get(e).CalculSalaire();
-            System.out.println("Salaire de "+entreprise.get(e)+" : "+salaire);
+        for (Employe e : entreprise){
+            float salaire = e.CalculSalaire();
+            System.out.println("Salaire de "+e+" : "+salaire);
             salaireTotal += salaire;
         }
         return salaireTotal;
+    }
+
+    public String affichageHierarchique(){
+        String aff = "";
+        for(Employe e: entreprise){
+            if(e.id.length() < 4){
+                Responsable r = (Responsable) e;
+                aff += r.afficherHierarchieInf();
+            }
+        }
+        return aff;
     }
 }
