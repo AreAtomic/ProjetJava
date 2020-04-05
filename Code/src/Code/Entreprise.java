@@ -97,25 +97,6 @@ public class Entreprise implements Payable {
                 }
             }
         }
-        rangementId();
-    }
-
-    private void rangementId() {
-
-    }
-
-    private int recupCptRespNiveau(int niveau){
-        int cptRN = 1;
-        if(this.idEmployes.size() > 0){
-            for(String i : idEmployes){
-                if(i.length() == 3){
-                    if(i.charAt(1) == niveau){
-                        cptRN = Integer.parseInt(String.valueOf(i.charAt(3)));
-                    }
-                }
-            }
-        }
-        return cptRN;
     }
 
     //Méthode de création de l'entreprise
