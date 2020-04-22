@@ -130,16 +130,22 @@ public class Entreprise implements Payable {
                 continu = false;
             }
         }
+
+        //Liste avec index pour pouvoir break la deuxième for du rangement dans les listes de responsables.
+        ArrayList<Employe> employeSto = new ArrayList<Employe>();
+        for(Employe e: entreprise){
+            employeSto.add(e);
+        }
         for(Employe r: entreprise){
             if(r.id.length() <= 4) {
-                System.out.println("Non");
                 Responsable r1 = (Responsable) r;
                 int niveau = r.id.charAt(1);
-                for (Employe e : entreprise){
+                for (int i=0; i<entreprise.size(); i++){
+                    Employe e = employeSto.get(i);
                     int eNiveau = e.id.charAt(1);
                     if(e != r){
-                        if(r.id.length() < 4 && r.id.charAt(1) == niveau){
-                            return;
+                        if(e.id.length() <= 4 && e.id.charAt(1) == niveau){
+                            i = entreprise.size();
                         }else{
                             r1.addEmployee(e);
                         }
