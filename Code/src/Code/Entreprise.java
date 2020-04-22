@@ -276,13 +276,35 @@ public class Entreprise implements Payable {
         return salaireTotal;
     }
 
-    public String affichageHierarchique(){
+    public String affichageHierarchique(int matricule){
         String aff = "";
+        boolean firstFind = false;
+        boolean firstEnd = true;
+        int compteur = 1;
         for(Employe e: entreprise){
-            if(e.id.length() < 4){
-                Responsable r = (Responsable) e;
-                aff += r.afficherHierarchieInf();
+            if(e.getId().length() == 4){
+                if(firstFind) {
+                    firstEnd = false;
+                }
             }
+            if(e.getMatricule() == matricule){
+                if(compteur == 1){
+                    return entreprise.toString();
+                }
+                firstFind = true;
+            }
+            if(firstFind && firstEnd){
+                aff += e.toString();
+            }
+        }
+        return aff;
+    }
+
+    @Override
+    public String toString() {
+        String aff = "L'entreprise est composée de :";
+        for(Employe e: entreprise){
+            aff += e.toString();
         }
         return aff;
     }
