@@ -296,6 +296,7 @@ public class Entreprise implements Payable {
             if(firstFind && firstEnd){
                 aff += e.toString();
             }
+            compteur++;
         }
         return aff;
     }
@@ -307,5 +308,27 @@ public class Entreprise implements Payable {
             aff += e.toString();
         }
         return aff;
+    }
+
+    public int calculSalaire() {
+        int salaireTotal = 0;
+        for (Employe e: entreprise){
+            salaireTotal += e.CalculSalaire();
+        }
+        return salaireTotal;
+    }
+
+    public int getMatriculeEmploye(String nom, String prenom) throws EntrepriseException{
+        if (){
+            throw new EntrepriseException("Le nom choisi n'est pas valide ou n'existe pas"+nom);
+        }
+        else if()
+            throw new EntrepriseException("Le prénom n'est pas valide ou n'existe pas"+prenom);
+        for(Employe e: entreprise){
+            if(e.getNom().equals(nom) && e.getPrenom().equals(prenom)){
+                return e.getMatricule();
+            }
+        }
+        return 0;
     }
 }
