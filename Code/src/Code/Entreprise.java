@@ -113,8 +113,8 @@ public class Entreprise implements Payable {
 
         //Boucle de création des Responsable de niveau (Gérant de l'entreprise)
         boolean continu = true;
-        if(entreprise.isEmpty()){
-
+        if(!entreprise.isEmpty()){
+            modificationEntreprise();
         }
         else {
             while (continu) {
@@ -267,10 +267,10 @@ public class Entreprise implements Payable {
        for(Employe e: entreprise){
            if(e.getMatricule() == matricule){
                if(e.getId().length() == 4){
-
                    int cptR = e.getId().charAt(1) + 1;
                    ArrayList<Employe> liste = affichageHierarchique(e.getMatricule());
-                   int cptRNiveau = liste.size();
+                   int cptRNiveau = e.getId().charAt(1);
+                   int cptRBranche = liste.size();
                    int cptE = 0;
                    int cptC = 0;
 
@@ -312,8 +312,7 @@ public class Entreprise implements Payable {
                    }
 
                }else {
-                   sc.nextLine();
-                   System.out.println("Vous voulez modifier l'indice Salaire de " + e.getNom() + " " + e.getPrenom());
+                   System.out.println("Vous voulez modifier l'indice Salaire de " + e.getNom() + " " + e.getPrenom()+"O/N?");
                    if (sc.nextLine().equals('O')) {
                        System.out.println("Nouvel indice salaire : ");
                        e.setIndiceSalaire(sc.nextInt());
@@ -323,6 +322,7 @@ public class Entreprise implements Payable {
                }
            }
        }
+       return false;
     }
 
     //Methode de calcul des salaires totaux que l'entreprise reverse
