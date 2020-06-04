@@ -118,6 +118,7 @@ public class Entreprise implements Payable {
         boolean continu = true;
         while(continu) {
             System.out.println("Créer un : Responsable de niveau " + 1 + "," + cptRNiveau + " (tapez R)");
+            System.out.println("Passer au niveau suivant (tapez S)");
             Scanner sc = new Scanner(System.in);
             if (sc.nextLine().equals("R")) {
                 cptR = 1;
@@ -126,6 +127,9 @@ public class Entreprise implements Payable {
                 //Apelle la création de la branche sous le gérant
                 creationBranche(cptR+1, cptE, cptC, 1, cptRNiveau);
                 cptRNiveau += 1;
+            }else if(sc.nextLine().equals("S")){
+                cptR = 1;
+                creationBranche(cptR+1, cptE, cptC, 1, cptRNiveau);
             } else {
                 continu = false;
             }
@@ -319,16 +323,20 @@ public class Entreprise implements Payable {
     }
 
     public int getMatriculeEmploye(String nom, String prenom) throws EntrepriseException{
-        if (){
-            throw new EntrepriseException("Le nom choisi n'est pas valide ou n'existe pas"+nom);
-        }
-        else if()
-            throw new EntrepriseException("Le prénom n'est pas valide ou n'existe pas"+prenom);
         for(Employe e: entreprise){
-            if(e.getNom().equals(nom) && e.getPrenom().equals(prenom)){
-                return e.getMatricule();
+            if(e.getNom().equals(nom)){
+                if (e.getPrenom().equals(prenom)){
+                    return e.getMatricule();
+                }
+                throw new EntrepriseException("Le prénom n'est pas valide ou n'existe pas" + prenom);
+            }
+            if(e.getPrenom().equals(prenom)){
+                if (e.getNom().equals(nom)){
+                    return e.getMatricule();
+                }
+                throw new EntrepriseException("Le nom n'est pas valide ou n'existe pas" + prenom);
             }
         }
-        return 0;
+        throw new EntrepriseException("L'employé n'est pas valide ou n'existe pas");
     }
 }
