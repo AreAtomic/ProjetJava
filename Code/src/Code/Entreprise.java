@@ -2,35 +2,75 @@ package Code;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
+
+import static java.nio.file.StandardOpenOption.APPEND;
 
 public class Entreprise implements Payable {
-    protected TreeMap<String, Employe> entreprise;
+    protected TreeSet<Employe> entreprise;
     protected ArrayList<String> idEmployes;
     protected ArrayList<Employe> verifMatricules;
+    protected String fileNom;
 
-    public Entreprise() throws EntrepriseException, FileNotFoundException {
-        this.entreprise = new TreeMap<String, Employe>();
+    public Entreprise() {
+        this.entreprise = new TreeSet<Employe>();
         this.idEmployes = new ArrayList<String>();
         this.verifMatricules = new ArrayList<>();
+        this.fileNom = "UNDEFINED";
+    }
+
+    //Methode de création du fichier de sauvegarde ou de récupération des données
+    protected String creationFichier() throws IOException, EntrepriseException {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Bienvenue dans la création de votre entreprise : entrez le nom du fichier souhaité");
+        String file = sc.nextLine();
+        file = file+".csv";
+        File f = new File(file);
+        //Création du fichier
+        if(f.createNewFile()){
+            System.out.println("Le fichier à été créé au chemin : "+f.getAbsolutePath());
+            ecritureFichier("Id;Nom;Prénom;Matricule;IndiceSalaire\n", f.getAbsolutePath());
+        }
+        //Récupération des données
+        else{
+            System.out.println("Le fichier existe dèjà");
+            lectureFichier(f.getAbsolutePath());
+        }
+        return f.getAbsolutePath();
+    }
+
+    //Méthode d'écriture dans le fichier : newLine est la nouvelle ligne et file est le chemin ou l'on doit écrire
+    private void ecritureFichier(String newLine, String file) throws IOException {
+        Path sauvegarde = Paths.get(file);
+        Files.write(sauvegarde, String.format(newLine).getBytes(), APPEND);
+    }
+
+    private void lectureFichier(String path) throws FileNotFoundException, EntrepriseException {
         Scanner sc;
-        sc = new Scanner(new File("C:\\Users\\cacar\\Documents\\ProjetJavaVrai\\Code\\src\\Code\\Entreprise.csv"));
+        sc = new Scanner(new File(path));
         String ligne = sc.nextLine();
         while (sc.hasNext()) {
             ligne = sc.nextLine();
-            String[] stoken = ligne.split(",");
+            String[] stoken = ligne.split(";");
             String id = stoken[0];
             String nom = stoken[1];
             String prenom = stoken[2];
             int matricule = Integer.parseInt(stoken[3]);
             float indice = Integer.parseInt(stoken[4]);
+            int volumeMensuelVente = 0;
+            if(stoken.length > 5){
+                volumeMensuelVente = Integer.parseInt(stoken[5]);
+            }
             this.idEmployes.add(id);
 
             if (id.charAt(id.length() - 2) == ('E')) {
-                EmployeDeBase employe = new EmployeDeBase(nom, prenom, matricule, indice);
-                this.entreprise.put(id, employe);
+                EmployeDeBase employe = new EmployeDeBase(id, nom, prenom, matricule, indice);
+                this.entreprise.add(employe);
                 this.verifMatricules.add(employe);
                 for (Employe e : verifMatricules) {
                     if (e.matricule == matricule && !(e.nom.equals(nom))) {
@@ -38,8 +78,8 @@ public class Entreprise implements Payable {
                     }
                 }
             } else if (id.charAt(id.length() - 2) == ('C')) {
-                Commercial commercial = new Commercial(nom, prenom, matricule, indice);
-                this.entreprise.put(id, commercial);
+                Commercial commercial = new Commercial(id, nom, prenom, matricule, indice, volumeMensuelVente);
+                this.entreprise.add(commercial);
                 this.verifMatricules.add(commercial);
                 for (Employe e : verifMatricules) {
                     if (e.matricule == matricule && !(e.nom.equals(nom))) {
@@ -47,8 +87,8 @@ public class Entreprise implements Payable {
                     }
                 }
             } else {
-                Responsable respo = new Responsable(nom, prenom, matricule, indice);
-                this.entreprise.put(id, respo);
+                Responsable respo = new Responsable(id, nom, prenom, matricule, indice);
+                this.entreprise.add(respo);
                 this.verifMatricules.add(respo);
                 for (Employe e : verifMatricules) {
                     if (e.matricule == matricule && !(e.nom.equals(nom))) {
@@ -61,131 +101,222 @@ public class Entreprise implements Payable {
 
     }
 
-    public void creation() {
+    //Méthode de création de l'entreprise
+    public void creationEntreprise() throws IOException, EntrepriseException {
+        //Initialisation des variables nécessaires à la création ou modification de l'entreprise
+        fileNom = creationFichier();
+        int cptR = 0;
+        int cptRNiveau = 1;
+        int cptE = 1;
+        int cptC = 1;
+        /*
+        //Initialisation des compteurs pour une reprise de sauvegarde
+        if(this.idEmployes.size() > 0){
+            recupCptRespNiveau(1);
+        }*/
+        //Boucle de création des Responsable de niveau (Gérant de l'entreprise)
         boolean continu = true;
-        int cptR = 1;
-        System.out.println("Bienvenu dans la création de l'entreprise");
-        Scanner sc = new Scanner(System.in);
-        while (continu) {
-            System.out.println("Combien de responsable(s) en haut de la hierarchie de l'entreprise? ");
-            int reponse = sc.nextInt();
-            if (reponse == 1) {
-                Employe R = creationResponsable();
-                String responsable = "R1";
-                entreprise.put(responsable, R);
-                boolean emp = true;
-                while (emp) {
-                    int cptEmploye = 0;
-                    int cptCommercial = 0;
-                    int cptRNiveau = 0;
-                    String employe = "";
-                    sc.nextLine();
-                    System.out.println("Employe sous le Reponsable (E), Commercial sous le Responsable (C), Responsable sous le Responsable (R), entrer N pour quitter : ");
-                    String rep = sc.nextLine();
-                    if (rep.equals("N")) {
-                        emp = false;
-                        continu = false;
-                        System.out.println("L'entreprise créée est :\n"+entreprise);
-                    } else if (rep.equals("E")) {
-                        Employe E = creationEmployeDeBase();
-                        employe = "E" +cptEmploye + 1;
-                        entreprise.put(responsable+employe , E);
-
-                    } else if (rep.equals("C")) {
-                        Employe C = creationCommercial();
-                        entreprise.put(responsable + "C" + cptCommercial, C);
-                        cptCommercial += 1;
-                    } else if (rep.equals("R")) {
-                        cptR = 2;
-                        Employe R2 = creationResponsable();
-                        cptRNiveau += 1;
-                        responsable = "R" + cptR + 1 + "," + cptRNiveau;
-                        entreprise.put(responsable, R2);
-                        creaBrance(responsable, 1, 1, cptR + 1, true);
-                    }
-
-                }
-            } else {
-
-            }
-        }
-
-
-    }
-
-    private Responsable creationResponsable() { //Crétion d'un Responsable
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Nom : ");
-        String nom = sc.nextLine();
-        System.out.print("\nPrenom : ");
-        String prenom = sc.nextLine();
-        System.out.print("\nMatricule : ");
-        int matricule = sc.nextInt();
-        System.out.print("\nIndice Salaire : ");
-        int indiceSalaire = sc.nextInt();
-        return new Responsable(nom, prenom, matricule, indiceSalaire);
-    } // methode pour alleger la methode création et modificationEntreprise
-
-    private Commercial creationCommercial() {//création d'un Commercial
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Nom : ");
-        String nom = sc.nextLine();
-        System.out.print("\nPrenom : ");
-        String prenom = sc.nextLine();
-        System.out.print("\nMatricule : ");
-        int matricule = sc.nextInt();
-        System.out.print("\nIndice Salaire : ");
-        int indiceSalaire = sc.nextInt();
-        return new Commercial(nom, prenom, matricule, indiceSalaire);
-    }// methode pour alleger la methode création et modificationEntreprise
-
-    private EmployeDeBase creationEmployeDeBase() { // methode pour créer un Employe de base
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Nom : ");
-        String nom = sc.nextLine();
-        System.out.print("\nPrenom : ");
-        String prenom = sc.nextLine();
-        System.out.print("\nMatricule : ");
-        int matricule = sc.nextInt();
-        System.out.print("\nIndice Salaire : ");
-        int indiceSalaire = sc.nextInt();
-        return new EmployeDeBase(nom, prenom, matricule, indiceSalaire);
-    }// methode pour alleger la methode création et modificationEntreprise
-
-    private void creaBrance(String responsable, int cptEmploye, int cptCommercial, int cptR, boolean continuer) {
-        while (continuer) {
-            int cptRNiveau = 0;
+        while(continu) {
+            System.out.println("Créer un : Responsable de niveau " + 1 + "," + cptRNiveau + " (tapez R)");
+            System.out.println("Passer au niveau suivant (tapez S)");
             Scanner sc = new Scanner(System.in);
-            System.out.println("Employe sous le Reponsable" + cptR + " (E), Commercial sous le Responsable" + cptR + " (C), Responsable sous le Responsable" + cptR + " (R), entrer N pour quitter");
-            String rep = sc.nextLine();
-            if (rep.equals("N")) {
-                continuer = false;
-            } else if (rep.equals("E")) {
-                Employe E = creationEmployeDeBase();
-                entreprise.put(responsable + "E" + cptEmploye, E);
-                cptEmploye += 1;
-            } else if (rep.equals("C")) {
-                Employe C = creationCommercial();
-                entreprise.put(responsable + "C" + cptCommercial, C);
-                cptCommercial += 1;
-            } else if (rep.equals("R")) {
-                Employe R2 = creationResponsable();
+            if (sc.nextLine().equals("R")) {
+                cptR = 1;
+                String id = "R" + cptR + "," + cptRNiveau;
+                entreprise.add(creationResponsable(id));
+                //Apelle la création de la branche sous le gérant
+                creationBranche(cptR+1, cptE, cptC, 1, cptRNiveau);
                 cptRNiveau += 1;
-                responsable = "R" + cptR + "," + cptRNiveau;
-                entreprise.put(responsable, R2);
-                creaBrance(responsable, 1, 1, cptR + 1, true);
+            }else if(sc.nextLine().equals("S")){
+                cptR = 1;
+                creationBranche(cptR+1, cptE, cptC, 1, cptRNiveau);
+            } else {
+                continu = false;
             }
         }
-    }// methode pour alleger la methode création et modificationEntreprise
-
-    public float CalculSalaire() {
+        //Liste avec index pour pouvoir break la deuxième for du rangement dans les listes de responsables.
+        ArrayList<Employe> employeSto = new ArrayList<Employe>();
+        for(Employe e: entreprise){
+            employeSto.add(e);
+        }
+        for(Employe r: entreprise){
+            if(r.id.length() <= 4) {
+                Responsable r1 = (Responsable) r;
+                int niveau = r.id.charAt(1);
+                for (int i=0; i<entreprise.size(); i++){
+                    Employe e = employeSto.get(i);
+                    int eNiveau = e.id.charAt(1);
+                    if(e != r){
+                        if(e.id.length() <= 4 && e.id.charAt(1) == niveau){
+                            i = entreprise.size();
+                        }else{
+                            r1.addEmployee(e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //Création d'une branche sous un responsable de manière récursive
+    public boolean creationBranche(int cptR, int cptE, int cptC, int cptRNiveau, int cptRBranche) throws IOException {
+        boolean branche = true;
+        //Permet de remonter lorsque l'on a finis la création de la branche
+        if(cptR == 1){
+            return false;
+        }
+        while(branche) {
+            //cptRNiveau = recupCptRespNiveau(cptR);
+            Scanner sc = new Scanner(System.in);
+            System.out.println("Créer un : Responsable de niveau " + (cptR) + " (tapez R), un employee sous Responsable " + (cptR-1) + " (tapez E), un commercial sous Responsable " + (cptR-1) + " (tapez C), branche terminée (tapez Q)");
+            String rep = sc.nextLine();
+            if (rep.equals("R")) {
+                String id = "R" + cptR + "," + cptRNiveau;
+                cptRNiveau += 1;
+                entreprise.add(creationResponsable(id));
+                //Création d'une sous branche avec un nouveau responsable (récursivité de la création)
+                return (creationBranche(cptR+1, cptE, cptC, 1, cptRNiveau));
+            }
+            //Crée un employé de base
+            else if (rep.equals("E")) {
+                int cptRLoc = cptR - 1;
+                String id = "R"+cptRLoc+","+(cptRBranche-1)+"E"+cptE;
+                entreprise.add(creationEmploye(id));
+                cptE += 1;
+            }
+            //Crée un commercial
+            else if (rep.equals("C")) {
+                int cptRLoc = cptR - 1;
+                String id = "R"+cptRLoc+","+(cptRBranche-1)+"C"+cptC;
+                entreprise.add(creationCommercial(id));
+                cptC += 1;
+            }
+            //L'utilisateur demande à quitter
+            else if(rep.equals("Q")){
+                return creationBranche(cptR-1, cptE, cptC, cptRNiveau+1, cptRBranche);
+            }
+        }
+        return true;
+    }
+    //Fonction permettant la création d'un responsable
+    public Responsable creationResponsable(String id) throws IOException {
+        Scanner sc = new Scanner(System.in);
+        // Processus de création
+        System.out.print("Nom du Responsable : ");
+        String nom = sc.nextLine();
+        System.out.print("Prénom du Responsable : ");
+        String prenom = sc.nextLine();
+        System.out.print("Matricule du Responsable (en chiffre): ");
+        int matricule = sc.nextInt();
+        System.out.print("Indice salaire du Responsable (en chiffre): ");
+        int indiceSalaire = sc.nextInt();
+        //Création du responsable et écriture dans le fichier de sauvegarde
+        Responsable r = new Responsable(id, nom, prenom, matricule, indiceSalaire);
+        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
+        ecritureFichier(newLine, fileNom);
+        return r;
+    }
+    //Fonction permettant la création d'un employe de base
+    public EmployeDeBase creationEmploye(String id) throws IOException {
+        Scanner sc = new Scanner(System.in);
+        // Processus de création
+        System.out.print("Nom de l'Employe : ");
+        String nom = sc.nextLine();
+        System.out.print("Prénom de l'Employe : ");
+        String prenom = sc.nextLine();
+        System.out.print("Matricule de l'Employe (en chiffre): ");
+        int matricule = sc.nextInt();
+        System.out.print("Indice salaire de l'Employe (en chiffre): ");
+        int indiceSalaire = sc.nextInt();
+        //Création de l'employé et écriture dans le fichier de sauvegarde
+        EmployeDeBase e = new EmployeDeBase(id, nom, prenom, matricule, indiceSalaire);
+        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
+        ecritureFichier(newLine, fileNom);
+        return e;
+    }
+    //Fonction permettant la création d'un commercial sans son volume de vente
+    public Commercial creationCommercial(String id) throws IOException {
+        Scanner sc = new Scanner(System.in);
+        // Processus de création
+        System.out.print("Nom du Commercial : ");
+        String nom = sc.nextLine();
+        System.out.print("Prénom du Commercial : ");
+        String prenom = sc.nextLine();
+        System.out.print("Matricule du Commercial (en chiffre): ");
+        int matricule = sc.nextInt();
+        System.out.print("Indice salaire du Commercial (en chiffre): ");
+        int indiceSalaire = sc.nextInt();
+        System.out.print("Volume de vente du Commercial (en chiffre): ");
+        int volumeVente = sc.nextInt();
+        //Création de l'employé et écriture dans le fichier de sauvegarde
+        Commercial c = new Commercial(id, nom, prenom, matricule, indiceSalaire, volumeVente);
+        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+";"+volumeVente+"\n";
+        ecritureFichier(newLine, fileNom);
+        return c;
+    }
+    //Methode de calcul des salaires totaux que l'entreprise reverse
+    public float CalculSalaire(){
         float salaireTotal = 0;
-
-        for (String e : idEmployes) {
-            float salaire = entreprise.get(e).CalculSalaire();
-            System.out.println("Salaire de " + entreprise.get(e) + " : " + salaire);
+        for (Employe e : entreprise){
+            float salaire = e.CalculSalaire();
+            System.out.println("Salaire de "+e+" : "+salaire);
             salaireTotal += salaire;
         }
         return salaireTotal;
+    }
+    public String affichageHierarchique(int matricule){
+        String aff = "";
+        boolean firstFind = false;
+        boolean firstEnd = true;
+        int compteur = 1;
+        for(Employe e: entreprise){
+            if(e.getId().length() == 4){
+                if(firstFind) {
+                    firstEnd = false;
+                }
+            }
+            if(e.getMatricule() == matricule){
+                if(compteur == 1){
+                    return entreprise.toString();
+                }
+                firstFind = true;
+            }
+            if(firstFind && firstEnd){
+                aff += e.toString();
+            }
+            compteur++;
+        }
+        return aff;
+    }
+    @Override
+    public String toString() {
+        String aff = "L'entreprise est composée de :";
+        for(Employe e: entreprise){
+            aff += e.toString();
+        }
+        return aff;
+    }
+    public int calculSalaire() {
+        int salaireTotal = 0;
+        for (Employe e: entreprise){
+            salaireTotal += e.CalculSalaire();
+        }
+        return salaireTotal;
+    }
+    public int getMatriculeEmploye(String nom, String prenom) throws EntrepriseException{
+        for(Employe e: entreprise){
+            if(e.getNom().equals(nom)){
+                if (e.getPrenom().equals(prenom)){
+                    return e.getMatricule();
+                }
+                throw new EntrepriseException("Le prénom n'est pas valide ou n'existe pas" + prenom);
+            }
+            if(e.getPrenom().equals(prenom)){
+                if (e.getNom().equals(nom)){
+                    return e.getMatricule();
+                }
+                throw new EntrepriseException("Le nom n'est pas valide ou n'existe pas" + prenom);
+            }
+        }
+        throw new EntrepriseException("L'employé n'est pas valide ou n'existe pas");
     }
 }
