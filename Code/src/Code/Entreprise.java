@@ -1,8 +1,6 @@
 package Code;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,11 +12,13 @@ import static java.nio.file.StandardOpenOption.APPEND;
 public class Entreprise implements Payable {
     protected TreeSet<Employe> entreprise;
     protected ArrayList<String> idEmployes;
+    protected ArrayList<Employe> employeSto;
     protected ArrayList<Employe> verifMatricules;
     protected String fileNom;
 
     public Entreprise() {
         this.entreprise = new TreeSet<Employe>();
+        this.employeSto = new ArrayList<Employe>();
         this.idEmployes = new ArrayList<String>();
         this.verifMatricules = new ArrayList<>();
         this.fileNom = "UNDEFINED";
@@ -30,6 +30,7 @@ public class Entreprise implements Payable {
         System.out.println("Bienvenue dans la création de votre entreprise : entrez le nom du fichier souhaité");
         String file = sc.nextLine();
         file = file+".csv";
+        fileNom = file;
         File f = new File(file);
         //Création du fichier
         if(f.createNewFile()){
@@ -118,14 +119,12 @@ public class Entreprise implements Payable {
                 System.out.println("Passer au niveau suivant (tapez S)");
                 Scanner sc = new Scanner(System.in);
                 if (sc.nextLine().equals("R")) {
-                    cptR = 1;
-                    String id = "R" + cptR + "," + cptRNiveau;
-                    entreprise.add(modificationnResponsable(id));
 
                     //Apelle la création de la branche sous le responsable 1,1
                     modificationBranche(cptR + 1, cptE, cptC, 1, cptRNiveau);
                     cptRNiveau += 1;
                 } else if (sc.nextLine().equals("S")) {
+                    cptR = 1;
                     modificationBranche(cptR + 1, cptE, cptC, 1, cptRNiveau);
                     continu = true;
                 } else{
@@ -152,7 +151,6 @@ public class Entreprise implements Payable {
             }
         }
         //Liste avec index pour pouvoir break la deuxième for du rangement dans les listes de responsables.
-        ArrayList<Employe> employeSto = new ArrayList<Employe>();
         for(Employe e: entreprise){
             employeSto.add(e);
         }
@@ -226,26 +224,20 @@ public class Entreprise implements Payable {
         while(branche) {
             //cptRNiveau = recupCptRespNiveau(cptR);
             Scanner sc = new Scanner(System.in);
-            System.out.println("Modifier le : Responsable de niveau " + (cptR) + " (tapez R), le(s) employee sous Responsable " + (cptR-1) + " (tapez E), le(s) commercial sous Responsable " + (cptR-1) + " (tapez C), branche terminée (tapez Q)");
+            System.out.println("Modifier le : le(s) employe(s) sous Responsable " + (cptR-1) + " (tapez E), le(s) commercial sous Responsable " + (cptR-1) + " (tapez C), branche terminée (tapez Q)");
             String rep = sc.nextLine();
-            if (rep.equals("R")) {
-                String id = "R" + cptR + "," + cptRNiveau;
-                cptRNiveau += 1;
-                entreprise.add(modificationnResponsable(id));
-                //Création d'une sous branche avec un nouveau responsable (récursivité de la création)
-                return (modificationBranche(cptR+1, cptE, cptC, 1, cptRNiveau));
-            }
+
             //Crée un employé de base
-            else if (rep.equals("E")) {
+            if (rep.equals("E")) {
                 int cptRLoc = cptR - 1;
-                String id = "R"+cptRLoc+","+(cptRBranche-1)+"E"+cptE;
+                String id = "R"+cptRLoc+","+(cptRBranche)+"E"+cptE;
                 entreprise.add(creationEmploye(id));
                 cptE += 1;
             }
             //Crée un commercial
             else if (rep.equals("C")) {
                 int cptRLoc = cptR - 1;
-                String id = "R"+cptRLoc+","+(cptRBranche-1)+"C"+cptC;
+                String id = "R"+cptRLoc+","+(cptRBranche)+"C"+cptC;
                 entreprise.add(creationCommercial(id));
                 cptC += 1;
             }
@@ -271,33 +263,6 @@ public class Entreprise implements Payable {
         int indiceSalaire = sc.nextInt();
         //Création du responsable et écriture dans le fichier de sauvegarde
         Responsable r = new Responsable(id, nom, prenom, matricule, indiceSalaire);
-        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
-        ecritureFichier(newLine, fileNom);
-        return r;
-    }
-
-    //Fonction permettant la création d'un responsable
-    public Responsable modificationnResponsable(String id) throws IOException {
-        Scanner sc = new Scanner(System.in);
-        // Processus de création
-        System.out.print("Nom du Responsable : ");
-        String nom = sc.nextLine();
-        System.out.print("Prénom du Responsable : ");
-        String prenom = sc.nextLine();
-        System.out.print("Matricule du Responsable (en chiffre): ");
-        int matricule = sc.nextInt();
-        System.out.print("Indice salaire du Responsable (en chiffre): ");
-        int indiceSalaire = sc.nextInt();
-        //Création du responsable et écriture dans le fichier de sauvegarde
-        Responsable r = new Responsable(id, nom, prenom, matricule, indiceSalaire);
-        for(Employe e: entreprise){
-            if(e.getId().equals(r.getId())){
-                entreprise.remove(e);
-                System.out.println(entreprise);
-                break;
-            }
-        }
-        entreprise.add(r);
         String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
         ecritureFichier(newLine, fileNom);
         return r;
@@ -427,5 +392,51 @@ public class Entreprise implements Payable {
             }
         }
         throw new EntrepriseException("L'employé n'est pas valide ou n'existe pas");
+    }
+
+    public void suppression(int mat) throws IOException {
+        Path sauvegarde = Paths.get("myTempFile.csv");
+
+        Scanner sc;
+        sc = new Scanner(new File(fileNom));
+        String ligne = sc.nextLine();
+        ligne += "\n";
+        Files.write(sauvegarde, String.format(ligne).getBytes(), APPEND);
+
+        while (sc.hasNext()) {
+            ligne = sc.nextLine();
+            String[] stoken = ligne.split(";");
+            String id = stoken[0];
+            String nom = stoken[1];
+            String prenom = stoken[2];
+            int matricule = Integer.parseInt(stoken[3]);
+            float indice = Integer.parseInt(stoken[4]);
+            if(matricule != mat) {
+                String newLine = id + ";" + nom + ";" + prenom + ";" + matricule + ";" + indice + "\n";
+                Files.write(sauvegarde, String.format(newLine).getBytes(), APPEND);
+            }
+        }
+
+        File fichier = new File(fileNom);
+        fichier.delete();
+
+        Path vrai = Paths.get(fileNom);
+
+        sc = new Scanner(new File("myTempFile.csv"));
+        String first = sc.nextLine();
+        first += "\n";
+        Files.write(sauvegarde, String.format(first).getBytes(), APPEND);
+
+        while (sc.hasNext()) {
+            ligne = sc.nextLine();
+            String[] stoken = ligne.split(";");
+            String id = stoken[0];
+            String nom = stoken[1];
+            String prenom = stoken[2];
+            int matricule = Integer.parseInt(stoken[3]);
+            float indice = Float.parseFloat(stoken[4]);
+            String newLine = id + ";" + nom + ";" + prenom + ";" + matricule + ";" + indice + "\n";
+            Files.write(vrai, String.format(newLine).getBytes(), APPEND);
+        }
     }
 }
