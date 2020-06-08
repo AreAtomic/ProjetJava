@@ -1,6 +1,8 @@
 package Code;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -121,7 +123,7 @@ public class Entreprise implements Payable {
                 if (sc.nextLine().equals("R")) {
 
                     //Apelle la création de la branche sous le responsable 1,1
-                    modificationBranche(cptR + 1, cptE, cptC, 1, cptRNiveau);
+                       modificationBranche(cptR + 1, cptE, cptC, 1, cptRNiveau);
                     cptRNiveau += 1;
                 } else if (sc.nextLine().equals("S")) {
                     cptR = 1;
@@ -359,6 +361,47 @@ public class Entreprise implements Payable {
         return branche;
     }
 
+    public void affichageHierarchiqueDirect(int matricule){
+        String aff = "";
+        int compteur = 0;
+        boolean firstFind = false;
+        boolean firstEnd = true;
+        String compare = "";
+        ArrayList<Employe> branche = new ArrayList<Employe>();
+
+        for(Employe e: entreprise){
+            if(e.getId().length() == 4){
+                if(firstFind) {
+                    if(e.getId().charAt(1) == branche.get(0).getId().charAt(1)) {
+                        firstEnd = false;
+                    }
+                }
+            }
+            if(e.getMatricule() == matricule){
+                firstFind = true;
+                compare = e.getId();
+            }
+            if(firstFind && firstEnd){
+                for(Employe b: entreprise){
+                    if(e.getId().length() == 4){
+                        branche.add(b);
+                    }
+                    else{
+                        if(e.getId().charAt(4) == 'E' && e.getId().substring(0,4).equals(compare)){
+                            branche.add(b);
+                        }
+                        if(e.getId().charAt(4) == 'C' && e.getId().substring(0,4).equals(compare)){
+                            branche.add(b);
+                        }
+                    }
+                }
+                aff += e.toString();
+            }
+            compteur++;
+        }
+        System.out.println(aff);
+    }
+
     @Override
     public String toString() {
         String aff = "L'entreprise est composée de :";
@@ -399,44 +442,39 @@ public class Entreprise implements Payable {
 
         Scanner sc;
         sc = new Scanner(new File(fileNom));
-        String ligne = sc.nextLine();
-        ligne += "\n";
-        Files.write(sauvegarde, String.format(ligne).getBytes(), APPEND);
+        String content = "";
 
         while (sc.hasNext()) {
-            ligne = sc.nextLine();
+            String ligne = sc.nextLine();
             String[] stoken = ligne.split(";");
             String id = stoken[0];
             String nom = stoken[1];
             String prenom = stoken[2];
             int matricule = Integer.parseInt(stoken[3]);
-            float indice = Integer.parseInt(stoken[4]);
+            int indice = Integer.parseInt(stoken[4]);
             if(matricule != mat) {
                 String newLine = id + ";" + nom + ";" + prenom + ";" + matricule + ";" + indice + "\n";
-                Files.write(sauvegarde, String.format(newLine).getBytes(), APPEND);
+                content += newLine;
             }
         }
+        Files.write(sauvegarde, Collections.singleton(content), StandardCharsets.UTF_8);
 
-        File fichier = new File(fileNom);
-        fichier.delete();
-
-        Path vrai = Paths.get(fileNom);
+        Path path = Paths.get(fileNom);
 
         sc = new Scanner(new File("myTempFile.csv"));
-        String first = sc.nextLine();
-        first += "\n";
-        Files.write(sauvegarde, String.format(first).getBytes(), APPEND);
+        String lignes = "";
 
         while (sc.hasNext()) {
-            ligne = sc.nextLine();
+            String ligne = sc.nextLine();
             String[] stoken = ligne.split(";");
             String id = stoken[0];
             String nom = stoken[1];
             String prenom = stoken[2];
             int matricule = Integer.parseInt(stoken[3]);
-            float indice = Float.parseFloat(stoken[4]);
+            int indice = Integer.parseInt(stoken[4]);
             String newLine = id + ";" + nom + ";" + prenom + ";" + matricule + ";" + indice + "\n";
-            Files.write(vrai, String.format(newLine).getBytes(), APPEND);
+            lignes += newLine;
         }
+        Files.write(path, Collections.singleton(lignes), StandardCharsets.UTF_8);
     }
 }
