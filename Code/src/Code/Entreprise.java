@@ -40,7 +40,6 @@ public class Entreprise implements Payable {
         else{
             System.out.println("Le fichier existe dèjà");
             lectureFichier(f.getAbsolutePath());
-            System.out.println(entreprise);
         }
         return f.getAbsolutePath();
     }
@@ -114,12 +113,30 @@ public class Entreprise implements Payable {
         //Boucle de création des Responsable de niveau (Gérant de l'entreprise)
         boolean continu = true;
         if(!entreprise.isEmpty()){
-            modificationEntreprise();
+            while (continu) {
+                System.out.println("Modifier le Responsable de niveau " + 1 + "," + cptRNiveau + " (tapez R)");
+                System.out.println("Passer au niveau suivant (tapez S)");
+                Scanner sc = new Scanner(System.in);
+                if (sc.nextLine().equals("R")) {
+                    cptR = 1;
+                    String id = "R" + cptR + "," + cptRNiveau;
+                    entreprise.add(modificationnResponsable(id));
+
+                    //Apelle la création de la branche sous le responsable 1,1
+                    modificationBranche(cptR + 1, cptE, cptC, 1, cptRNiveau);
+                    cptRNiveau += 1;
+                } else if (sc.nextLine().equals("S")) {
+                    modificationBranche(cptR + 1, cptE, cptC, 1, cptRNiveau);
+                    continu = true;
+                } else{
+                    continu = false;
+                }
+            }
+            System.out.println(entreprise);
         }
         else {
             while (continu) {
                 System.out.println("Créer un : Responsable de niveau " + 1 + "," + cptRNiveau + " (tapez R)");
-                System.out.println("Passer au niveau suivant (tapez S)");
                 Scanner sc = new Scanner(System.in);
                 if (sc.nextLine().equals("R")) {
                     cptR = 1;
@@ -199,6 +216,47 @@ public class Entreprise implements Payable {
         return true;
     }
 
+    //Création d'une branche sous un responsable de manière récursive
+    public boolean modificationBranche(int cptR, int cptE, int cptC, int cptRNiveau, int cptRBranche) throws IOException {
+        boolean branche = true;
+        //Permet de remonter lorsque l'on a finis la création de la branche
+        if(cptR == 1){
+            return false;
+        }
+        while(branche) {
+            //cptRNiveau = recupCptRespNiveau(cptR);
+            Scanner sc = new Scanner(System.in);
+            System.out.println("Modifier le : Responsable de niveau " + (cptR) + " (tapez R), le(s) employee sous Responsable " + (cptR-1) + " (tapez E), le(s) commercial sous Responsable " + (cptR-1) + " (tapez C), branche terminée (tapez Q)");
+            String rep = sc.nextLine();
+            if (rep.equals("R")) {
+                String id = "R" + cptR + "," + cptRNiveau;
+                cptRNiveau += 1;
+                entreprise.add(modificationnResponsable(id));
+                //Création d'une sous branche avec un nouveau responsable (récursivité de la création)
+                return (modificationBranche(cptR+1, cptE, cptC, 1, cptRNiveau));
+            }
+            //Crée un employé de base
+            else if (rep.equals("E")) {
+                int cptRLoc = cptR - 1;
+                String id = "R"+cptRLoc+","+(cptRBranche-1)+"E"+cptE;
+                entreprise.add(creationEmploye(id));
+                cptE += 1;
+            }
+            //Crée un commercial
+            else if (rep.equals("C")) {
+                int cptRLoc = cptR - 1;
+                String id = "R"+cptRLoc+","+(cptRBranche-1)+"C"+cptC;
+                entreprise.add(creationCommercial(id));
+                cptC += 1;
+            }
+            //L'utilisateur demande à quitter
+            else if(rep.equals("Q")){
+                return creationBranche(cptR-1, cptE, cptC, cptRNiveau+1, cptRBranche);
+            }
+        }
+        return true;
+    }
+
     //Fonction permettant la création d'un responsable
     public Responsable creationResponsable(String id) throws IOException {
         Scanner sc = new Scanner(System.in);
@@ -213,6 +271,33 @@ public class Entreprise implements Payable {
         int indiceSalaire = sc.nextInt();
         //Création du responsable et écriture dans le fichier de sauvegarde
         Responsable r = new Responsable(id, nom, prenom, matricule, indiceSalaire);
+        String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
+        ecritureFichier(newLine, fileNom);
+        return r;
+    }
+
+    //Fonction permettant la création d'un responsable
+    public Responsable modificationnResponsable(String id) throws IOException {
+        Scanner sc = new Scanner(System.in);
+        // Processus de création
+        System.out.print("Nom du Responsable : ");
+        String nom = sc.nextLine();
+        System.out.print("Prénom du Responsable : ");
+        String prenom = sc.nextLine();
+        System.out.print("Matricule du Responsable (en chiffre): ");
+        int matricule = sc.nextInt();
+        System.out.print("Indice salaire du Responsable (en chiffre): ");
+        int indiceSalaire = sc.nextInt();
+        //Création du responsable et écriture dans le fichier de sauvegarde
+        Responsable r = new Responsable(id, nom, prenom, matricule, indiceSalaire);
+        for(Employe e: entreprise){
+            if(e.getId().equals(r.getId())){
+                entreprise.remove(e);
+                System.out.println(entreprise);
+                break;
+            }
+        }
+        entreprise.add(r);
         String newLine = id+";"+nom+";"+prenom+";"+matricule+";"+indiceSalaire+"\n";
         ecritureFichier(newLine, fileNom);
         return r;
@@ -258,73 +343,6 @@ public class Entreprise implements Payable {
         return c;
     }
 
-    //Modification d'entreprise
-    public boolean modificationEntreprise() throws IOException {
-       System.out.println(entreprise);
-       System.out.println("Pour modifier les information d'un employe taper son matricule :");
-       Scanner sc = new Scanner(System.in);
-       int matricule = sc.nextInt();
-       for(Employe e: entreprise){
-           if(e.getMatricule() == matricule){
-               if(e.getId().length() == 4){
-                   int cptR = e.getId().charAt(1) + 1;
-                   ArrayList<Employe> liste = affichageHierarchique(e.getMatricule());
-                   int cptRNiveau = e.getId().charAt(1);
-                   int cptRBranche = liste.size();
-                   int cptE = 0;
-                   int cptC = 0;
-
-                   for(int i=0; i<liste.size(); i++){
-                       if(e.getId().length() > 4){
-                           if(e.getId().charAt(4) == 'E'){cptE ++;}
-                           if(e.getId().charAt(4) == 'C'){cptC ++;}
-                       }
-                   }
-
-                   System.out.println("Créer un : Responsable de niveau " + (cptR) + " (tapez R), un employee sous Responsable " + (cptR-1) + " (tapez E), un commercial sous Responsable " + (cptR-1) + " (tapez C), branche terminée (tapez Q)");
-                   String rep = sc.nextLine();
-
-
-                   if (rep.equals("R")) {
-                       String id = "R" + cptR + "," + cptRNiveau;
-                       cptRNiveau += 1;
-                       entreprise.add(creationResponsable(id));
-                       //Création d'une sous branche avec un nouveau responsable (récursivité de la création)
-                       return (creationBranche(cptR+1, cptE, cptC, 1, cptRNiveau));
-                   }
-                   //Crée un employé de base
-                   else if (rep.equals("E")) {
-                       int cptRLoc = cptR - 1;
-                       String id = "R"+cptRLoc+","+(cptRBranche-1)+"E"+cptE;
-                       entreprise.add(creationEmploye(id));
-                       cptE += 1;
-                   }
-                   //Crée un commercial
-                   else if (rep.equals("C")) {
-                       int cptRLoc = cptR - 1;
-                       String id = "R"+cptRLoc+","+(cptRBranche-1)+"C"+cptC;
-                       entreprise.add(creationCommercial(id));
-                       cptC += 1;
-                   }
-                   //L'utilisateur demande à quitter
-                   else if(rep.equals("Q")){
-                       return creationBranche(cptR-1, cptE, cptC, cptRNiveau+1, cptRBranche);
-                   }
-
-               }else {
-                   System.out.println("Vous voulez modifier l'indice Salaire de " + e.getNom() + " " + e.getPrenom()+"O/N?");
-                   if (sc.nextLine().equals('O')) {
-                       System.out.println("Nouvel indice salaire : ");
-                       e.setIndiceSalaire(sc.nextInt());
-                   } else {
-                       sc.nextLine();
-                   }
-               }
-           }
-       }
-       return false;
-    }
-
     //Methode de calcul des salaires totaux que l'entreprise reverse
     public float CalculSalaire(){
         float salaireTotal = 0;
@@ -346,7 +364,7 @@ public class Entreprise implements Payable {
         for(Employe e: entreprise){
             if(e.getId().length() == 4){
                 if(firstFind) {
-                    if(e.getId().charAt(1) == '1') {
+                    if(e.getId().charAt(1) == branche.get(0).getId().charAt(1)) {
                         firstEnd = false;
                     }
                 }
